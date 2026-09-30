@@ -1,7 +1,7 @@
-# [Nom du club] — site du club de basket
+# BC Valbrune — site du club de basket
 
-Page d’accueil du club, réalisée à partir de la maquette Claude Design « Page d’accueil »
-(export d’origine conservé dans `Page d’accueil-html.zip`).
+Site du club en deux pages : l’accueil, réalisé à partir de la maquette Claude Design « Page d’accueil »
+(export d’origine conservé dans `Page d’accueil-html.zip`), et une page contact dans le même style.
 
 HTML, CSS et JavaScript simples : aucune dépendance, aucune étape de compilation.
 
@@ -16,24 +16,32 @@ puis ouvrir <http://localhost:8000>.
 ## Organisation des fichiers
 
 ```
-index.html              la page
-assets/css/styles.css   les styles (couleurs et polices en tête de fichier)
-assets/js/main.js       menu mobile, compte à rebours, formulaire d’inscription
+index.html              l’accueil
+contact.html            formulaire, accès au gymnase, questions fréquentes
+assets/css/styles.css   les styles (couleurs, polices et courbe de mouvement en tête de fichier)
+assets/js/main.js       menu, animations, compte à rebours, formulaires
 assets/img/             parquet, salle, cuir, ballon et icône d’onglet
 ```
 
-## À compléter avant la mise en ligne
+## Contenu fictif à remplacer
 
-Les textes entre crochets sont des emplacements à remplacer (chercher `[` dans `index.html`) :
+Le club et toutes ses informations sont inventés pour que le site soit complet. Avant la mise en ligne,
+remplacer dans `index.html` et `contact.html` :
 
-- `[Nom du club]`, `[NOM DU CLUB]`, `[Ville]` et `[ANNÉE]` (écusson du pied de page), y compris dans le `<title>` et les balises `<meta>` ;
-- `[Adversaire]` dans l’agenda ;
-- `[Jours et horaires]` et `[Montant]` dans les cartes des catégories ;
-- `[Logo partenaire]` ;
-- l’adresse du gymnase dans le pied de page.
+- le nom **BC Valbrune**, la ville de **Valbrune** et l’année de création **1978** (écusson du pied de page),
+  y compris dans les `<title>` et les balises `<meta>` ;
+- l’adresse : **Gymnase des Tilleuls, 12 avenue Jean-Jaurès, 26400 Valbrune** (pied de page des deux pages
+  et section « Venir au gymnase ») ;
+- le téléphone **04 65 71 26 40**, dans une tranche réservée par l’Arcep aux œuvres de fiction, et l’e-mail
+  **contact@bc-valbrune.fr** ;
+- les adversaires de l’agenda (**ES Castelmoure**, **Saint-Aurèle Basket**) ;
+- les horaires d’entraînement et les cotisations (**130 €**, **160 €**, **190 €**) des cartes des catégories,
+  repris dans les questions fréquentes ;
+- les cinq partenaires (Ville de Valbrune, Maison Fabre, Garage Delorme, Pharmacie des Tilleuls, Le Comptoir du Sport) ;
+- les comptes Instagram, Facebook et YouTube (`bcvalbrune`) ;
+- les permanences, les lignes de bus, le parking et le plan d’accès de la page contact.
 
-Les liens des réseaux sociaux et plusieurs liens du pied de page (mentions légales, boutique, contact…)
-pointent pour l’instant vers le haut de la page (`#top`) : il faudra les faire pointer vers les vraies adresses.
+Les liens « Mentions légales » et « Confidentialité » renvoient encore en haut de page : ces pages restent à écrire.
 
 ## Changer la couleur du club
 
@@ -51,7 +59,7 @@ indiquée dans la balise `<time>` du billet. Garder le fuseau horaire dans cette
 (`+02:00` en heure d’été, `+01:00` en heure d’hiver) :
 
 ```html
-<li class="ticket" data-match-label="Seniors masculins contre [Adversaire], samedi 3 octobre à 20&nbsp;h&nbsp;30.">
+<li class="ticket" data-match-label="Seniors masculins contre l’ES Castelmoure, samedi 3 octobre à 20&nbsp;h&nbsp;30.">
   …
   <time datetime="2026-10-03T20:30+02:00">Samedi 3 octobre, 20&nbsp;h&nbsp;30</time>
 ```
@@ -59,18 +67,47 @@ indiquée dans la balise `<time>` du billet. Garder le fuseau horaire dans cette
 Une fois tous les matchs passés, le compte à rebours disparaît tout seul.
 Le texte du tableau lumineux défilant (`.led-text`, présent deux fois à l’identique) se modifie à la main.
 
-## Recevoir les demandes d’inscription
+## Recevoir les inscriptions et les messages
 
-En l’état, le formulaire vérifie l’adresse e-mail et affiche la confirmation, mais **n’envoie la demande nulle part**.
-Pour la recevoir par e-mail, créer un formulaire sur un service comme [Formspree](https://formspree.io)
-puis indiquer son adresse dans l’attribut `action` du formulaire :
+En l’état, les deux formulaires vérifient ce qui est saisi et affichent leur confirmation, mais
+**n’envoient rien**. Pour recevoir les demandes par e-mail, créer un formulaire sur un service comme
+[Formspree](https://formspree.io) puis indiquer son adresse dans l’attribut `action` de chaque formulaire :
 
 ```html
 <form class="join-form" id="form-inscription" action="https://formspree.io/f/votre-identifiant" method="post" novalidate>
+<form class="contact-form" id="form-contact" action="https://formspree.io/f/votre-identifiant" method="post" novalidate>
 ```
 
-Champs envoyés : `email` et `categorie` (`mini`, `jeunes` ou `adultes`).
+Champs envoyés :
+
+- inscription (accueil) : `email` et `categorie` (`mini`, `jeunes` ou `adultes`) ;
+- contact : `sujet` (`inscription`, `partenariat`, `benevolat`, `boutique` ou `autre`), `nom`, `email`,
+  `telephone` et `message`.
+
 En cas d’échec de l’envoi, un message invite la personne à réessayer.
+
+Un lien vers `contact.html#partenariat` (ou `#benevolat`, `#boutique`…) ouvre la page contact avec ce sujet
+déjà choisi : c’est ce qu’utilisent « Devenir partenaire », « Devenir bénévole » et « Boutique du club ».
+
+## Animations
+
+Chaque mouvement a un rôle, et tous partagent la même courbe (`--ease-out`) :
+
+- **apparition au défilement** : les blocs marqués `data-reveal` montent en fondu quand ils arrivent à l’écran,
+  en cascade dans un `data-reveal-stagger` ; les graphiques racontent leur donnée (les tirs s’inscrivent un à un,
+  le bilan de janvier s’étend, le trajet à pied se dessine sur le plan) ;
+- **parallaxe** : sur l’accueil, le terrain dessiné, le ballon, le fond de la salle et le ballon de l’inscription
+  défilent à des vitesses différentes (`data-parallax-hero` et `data-parallax`) ;
+- **survol** : les cartes des catégories se soulèvent et mènent à l’inscription, les boutons s’enfoncent au clic,
+  le tableau lumineux s’arrête pour être lu, le + des questions fréquentes devient une croix ;
+- **curseur** (souris uniquement) : le ballon et le badge de l’accueil suivent légèrement le curseur,
+  les maillots se balancent vers lui, un projecteur éclaire les cartes sombres du club ;
+- **repères** : un point orange signale dans le menu la section en cours ou la page ouverte,
+  et les deux pages s’enchaînent en fondu dans les navigateurs compatibles.
+
+Pour retirer un effet sur un élément, supprimer son attribut `data-reveal` ou `data-parallax…`.
+Tout mouvement est coupé pour les personnes qui ont activé « Réduire les animations » sur leur appareil :
+le contenu s’affiche alors directement.
 
 ## Mettre en ligne avec GitHub Pages
 
@@ -83,5 +120,5 @@ Tous les chemins sont relatifs : le site fonctionne aussi dans un sous-dossier o
 ## Accessibilité
 
 Navigation au clavier avec focus visible, lien d’évitement « Aller au contenu », textes alternatifs
-sur les schémas, et animations coupées pour les personnes qui ont activé « Réduire les animations »
-dans les réglages de leur appareil.
+sur les schémas et le plan, messages d’erreur des formulaires liés à leur champ et lus par les
+lecteurs d’écran, et animations coupées pour les personnes qui ont activé « Réduire les animations ».

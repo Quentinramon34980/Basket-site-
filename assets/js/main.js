@@ -1,6 +1,10 @@
-/* [Nom du club] — interactions de la page d'accueil */
+/* BC Valbrune — interactions du site */
 (() => {
   'use strict';
+
+  // Tous les effets de mouvement s'effacent si le visiteur a demandé moins d'animations.
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   /* ---------- Menu mobile ---------- */
 
@@ -28,6 +32,155 @@
     });
     window.matchMedia('(min-width: 861px)').addEventListener('change', (event) => {
       if (event.matches) setMenu(false);
+    });
+  }
+
+  /* ---------- Section en cours signalée dans le menu ---------- */
+
+  const spyLinks = [...document.querySelectorAll('.nav-links a[href^="#"], .menu-panel a[href^="#"]')];
+  const spied = [...new Set(spyLinks.map((link) => link.hash))]
+    .map((hash) => document.querySelector(hash))
+    .filter(Boolean)
+    .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+
+  if (spied.length && 'IntersectionObserver' in window) {
+    const inView = new Set();
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => (entry.isIntersecting ? inView.add(entry.target) : inView.delete(entry.target)));
+      const current = spied.find((section) => inView.has(section));
+      spyLinks.forEach((link) => {
+        if (current && link.hash === `#${current.id}`) link.setAttribute('aria-current', 'true');
+        else link.removeAttribute('aria-current');
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    spied.forEach((section) => spy.observe(section));
+  }
+
+  /* ---------- Apparition au défilement ---------- */
+  // Chaque [data-reveal] apparaît une fois quand il entre à l'écran ; dans un [data-reveal-stagger],
+  // les éléments se suivent à 90 ms d'intervalle.
+
+  document.querySelectorAll('[data-reveal-stagger]').forEach((group) => {
+    group.querySelectorAll(':scope > [data-reveal]').forEach((item, i) => {
+      item.style.setProperty('--reveal-delay', `${i * 90}ms`);
+    });
+  });
+
+  // Carte des tirs : les tirs s'inscrivent un par un, dans un ordre mélangé comme en séance.
+  document.querySelectorAll('.feature-figure').forEach((figure) => {
+    const shots = [...figure.querySelectorAll('.shots circle')];
+    shots.forEach((shot, i) => shot.style.setProperty('--i', (i * 7) % shots.length));
+  });
+
+  const revealables = [...document.querySelectorAll('[data-reveal]')];
+  const reveal = (element) => element.classList.add('is-revealed');
+
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    revealables.forEach(reveal);
+  } else {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        reveal(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+    revealables.forEach((element) => observer.observe(element));
+    window.addEventListener('beforeprint', () => revealables.forEach(reveal));
+  }
+
+  /* ---------- Parallaxe ---------- */
+  // data-parallax-hero="0.12" : la couche descend de 12 % du défilement (haut de page).
+  // data-parallax="50" : décalage en pixels sur une hauteur d'écran ; positif = plan du fond,
+  // négatif = premier plan. Mesuré sur la section parente pour ne pas mesurer son propre décalage.
+
+  const heroLayers = [...document.querySelectorAll('[data-parallax-hero]')];
+  const depthLayers = [...document.querySelectorAll('[data-parallax]')];
+
+  if (!reduceMotion && (heroLayers.length || depthLayers.length)) {
+    let queued = false;
+
+    const update = () => {
+      queued = false;
+      const viewport = window.innerHeight;
+      const strength = window.innerWidth < 861 ? 0.6 : 1;
+      const scrolled = window.scrollY;
+
+      if (scrolled < viewport * 1.6) {
+        heroLayers.forEach((layer) => {
+          layer.style.translate = `0 ${(scrolled * layer.dataset.parallaxHero * strength).toFixed(1)}px`;
+        });
+      }
+
+      const boxes = depthLayers.map((layer) => layer.parentElement.getBoundingClientRect());
+      depthLayers.forEach((layer, i) => {
+        const box = boxes[i];
+        if (box.bottom < -viewport * 0.2 || box.top > viewport * 1.2) return;
+        const progress = (box.top + box.height / 2 - viewport / 2) / viewport;
+        layer.style.translate = `0 ${(-progress * layer.dataset.parallax * strength).toFixed(1)}px`;
+      });
+    };
+
+    const queue = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', queue);
+    update();
+  }
+
+  /* ---------- Effets liés au curseur (souris uniquement) ---------- */
+
+  if (finePointer && !reduceMotion) {
+    const follow = (area, onMove, onLeave) => {
+      let frame = 0;
+      area.addEventListener('pointermove', (event) => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          const box = area.getBoundingClientRect();
+          const x = event.clientX - box.left;
+          const y = event.clientY - box.top;
+          onMove({ x, y, rx: (x / box.width) * 2 - 1, ry: (y / box.height) * 2 - 1 });
+        });
+      });
+      area.addEventListener('pointerleave', () => {
+        cancelAnimationFrame(frame);
+        onLeave();
+      });
+    };
+
+    // Accueil : le ballon et le badge suivent le curseur, le badge un peu plus (il est devant).
+    const hero = document.querySelector('.hero');
+    if (hero) {
+      follow(hero, ({ rx, ry }) => {
+        hero.style.setProperty('--px', rx.toFixed(3));
+        hero.style.setProperty('--py', ry.toFixed(3));
+      }, () => {
+        hero.style.removeProperty('--px');
+        hero.style.removeProperty('--py');
+      });
+    }
+
+    // Catégories : le maillot se balance vers le curseur.
+    document.querySelectorAll('.card').forEach((card) => {
+      follow(card, ({ rx, ry }) => {
+        card.style.setProperty('--jx', rx.toFixed(3));
+        card.style.setProperty('--jy', ry.toFixed(3));
+      }, () => {
+        card.style.removeProperty('--jx');
+        card.style.removeProperty('--jy');
+      });
+    });
+
+    // Le club : un projecteur éclaire la carte sous le curseur.
+    document.querySelectorAll('.feature').forEach((feature) => {
+      follow(feature, ({ x, y }) => {
+        feature.style.setProperty('--sx', `${Math.round(x)}px`);
+        feature.style.setProperty('--sy', `${Math.round(y)}px`);
+      }, () => {});
     });
   }
 
@@ -110,36 +263,45 @@
     timer = setInterval(tick, 1000);
   }
 
-  /* ---------- Formulaire d'inscription ---------- */
+  /* ---------- Formulaires (inscription et contact) ---------- */
+  // Sans attribut action sur le formulaire, rien n'est envoyé : la confirmation s'affiche seulement (voir README).
 
-  const form = document.getElementById('form-inscription');
-  const success = document.getElementById('inscription-ok');
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (form && success) {
-    const email = form.elements.email;
-    const error = form.querySelector('.form-error');
+  const initForm = ({ form, success, validate, fill }) => {
+    if (!form || !success) return;
     const submit = form.querySelector('[type="submit"]');
-    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const formError = form.querySelector('[data-form-error]');
+    const fields = [...form.querySelectorAll('[data-error]')];
 
-    const showError = (message) => {
-      error.hidden = !message;
-      error.textContent = message;
-      if (message) email.setAttribute('aria-invalid', 'true');
-      else email.removeAttribute('aria-invalid');
+    const setMessage = (element, message) => {
+      if (!element) return;
+      element.hidden = !message;
+      element.textContent = message;
     };
 
-    email.addEventListener('input', () => showError(''));
+    const setFieldError = (input, message) => {
+      setMessage(document.getElementById(input.dataset.error), message);
+      if (message) input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    };
+
+    form.addEventListener('input', (event) => {
+      if (event.target.dataset.error) setFieldError(event.target, '');
+    });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const value = email.value.trim();
-      if (!EMAIL_RE.test(value)) {
-        showError('Ajoute une adresse e-mail valide, par exemple prenom@exemple.fr.');
-        email.focus();
+      fields.forEach((input) => setFieldError(input, ''));
+      setMessage(formError, '');
+
+      const problems = validate(form);
+      if (problems.length) {
+        problems.forEach(([input, message]) => setFieldError(input, message));
+        problems[0][0].focus();
         return;
       }
 
-      // Sans attribut action sur le formulaire, la demande n'est envoyée nulle part : voir README.
       const endpoint = form.getAttribute('action');
       if (endpoint) {
         submit.disabled = true;
@@ -151,28 +313,72 @@
           });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
         } catch {
-          showError('L’envoi n’a pas abouti. Réessaie dans un instant.');
+          setMessage(formError, 'L’envoi n’a pas abouti. Réessaie dans un instant.');
           return;
         } finally {
           submit.disabled = false;
         }
       } else {
-        console.warn('Formulaire d’inscription : aucun attribut action, la demande n’a été envoyée nulle part.');
+        console.warn(`${form.id} : aucun attribut action, le message n’a été envoyé nulle part.`);
       }
 
-      const choice = form.querySelector('input[name="categorie"]:checked');
-      success.querySelector('[data-success-email]').textContent = value;
-      success.querySelector('[data-success-phrase]').textContent = choice?.dataset.phrase ?? '';
+      fill(form, success);
       form.hidden = true;
       success.hidden = false;
     });
+  };
 
-    // Les liens des cartes présélectionnent la catégorie correspondante
+  const invalidEmail = 'Ajoute une adresse e-mail valide, par exemple prenom@exemple.fr.';
+
+  initForm({
+    form: document.getElementById('form-inscription'),
+    success: document.getElementById('inscription-ok'),
+    validate: (form) => (EMAIL_RE.test(form.elements.email.value.trim()) ? [] : [[form.elements.email, invalidEmail]]),
+    fill: (form, box) => {
+      box.querySelector('[data-success-email]').textContent = form.elements.email.value.trim();
+      box.querySelector('[data-success-phrase]').textContent = form.querySelector('input[name="categorie"]:checked')?.dataset.phrase ?? '';
+    }
+  });
+
+  initForm({
+    form: document.getElementById('form-contact'),
+    success: document.getElementById('contact-ok'),
+    validate: (form) => {
+      const { nom, email, message } = form.elements;
+      const problems = [];
+      if (nom.value.trim().length < 2) problems.push([nom, 'Indique ton prénom et ton nom.']);
+      if (!EMAIL_RE.test(email.value.trim())) problems.push([email, invalidEmail]);
+      if (message.value.trim().length < 10) problems.push([message, 'Écris-nous au moins une phrase.']);
+      return problems;
+    },
+    fill: (form, box) => {
+      box.querySelector('[data-success-name]').textContent = form.elements.nom.value.trim().split(/\s+/)[0];
+      box.querySelector('[data-success-email]').textContent = form.elements.email.value.trim();
+    }
+  });
+
+  // Accueil : les liens des cartes présélectionnent la catégorie correspondante.
+  const joinForm = document.getElementById('form-inscription');
+  if (joinForm) {
     document.querySelectorAll('a[data-categorie]').forEach((link) => {
       link.addEventListener('click', () => {
-        const radio = form.querySelector(`input[name="categorie"][value="${link.dataset.categorie}"]`);
+        const radio = joinForm.querySelector(`input[name="categorie"][value="${link.dataset.categorie}"]`);
         if (radio) radio.checked = true;
       });
     });
+  }
+
+  // Contact : contact.html#partenariat, #benevolat, #boutique… présélectionne le sujet.
+  const contactForm = document.getElementById('form-contact');
+  if (contactForm) {
+    const pickSubject = () => {
+      const subject = decodeURIComponent(window.location.hash.slice(1));
+      const radio = subject && contactForm.querySelector(`input[name="sujet"][value="${CSS.escape(subject)}"]`);
+      if (!radio) return;
+      radio.checked = true;
+      document.getElementById('formulaire')?.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+    };
+    pickSubject();
+    window.addEventListener('hashchange', pickSubject);
   }
 })();
