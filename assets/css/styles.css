@@ -451,14 +451,16 @@ a {
 }
 
 .hero-title span,
-.contact-title span {
+.contact-title span,
+.events-title span {
   display: block;
   transform-origin: 0 100%;
   animation: land 0.95s ease-in 0.1s both;
 }
 
 .hero-title span:nth-child(2),
-.contact-title span:nth-child(2) {
+.contact-title span:nth-child(2),
+.events-title span:nth-child(2) {
   animation-delay: 0.2s;
 }
 
@@ -2245,6 +2247,408 @@ textarea.input {
   animation: rise 0.4s var(--ease-out) both;
 }
 
+/* ---------- Page événements ---------- */
+
+.events-hero {
+  position: relative;
+  margin: -76px 16px 0;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #0C1230;
+  color: var(--white);
+}
+
+.events-hero-bg {
+  position: absolute;
+  inset: 0;
+  background: url(../img/arena.webp) 50% 30% / cover no-repeat;
+}
+
+/* Voile sombre côté texte : le titre reste lisible devant les projecteurs */
+.events-hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(8, 10, 24, 0.82) 0%, rgba(8, 10, 24, 0.45) 55%, rgba(8, 10, 24, 0.15) 100%);
+}
+
+.events-hero-inner {
+  position: relative;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 150px var(--pad-x) clamp(48px, 6vw, 88px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px 48px;
+}
+
+.events-intro {
+  flex: 1 1 460px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.events-title {
+  margin: 0;
+  font-size: clamp(64px, 12vw, 140px);
+  line-height: 0.8;
+  font-stretch: 72%;
+  letter-spacing: -0.01em;
+}
+
+.events-lead {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(17px, 1.45vw, 19px);
+  line-height: 1.55;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Le compte à rebours devient le tableau d'affichage de la salle */
+.events-hero .next-match {
+  flex: 0 1 440px;
+  margin: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+  animation: rise 0.8s var(--ease-out) 0.35s both;
+}
+
+.calendar {
+  max-width: 1392px;
+  margin: 0 auto;
+  padding: clamp(56px, 7vw, 96px) var(--pad-x) 0;
+  scroll-margin-top: 80px;
+}
+
+.calendar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 40px;
+}
+
+.calendar-title {
+  margin: 0;
+  font-size: clamp(44px, 6.4vw, 84px);
+  line-height: 0.88;
+  font-stretch: 78%;
+}
+
+.calendar-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.events-filter {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.events-count {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--subtle);
+}
+
+.months {
+  display: grid;
+  gap: clamp(36px, 4vw, 56px);
+  margin-top: clamp(32px, 4vw, 48px);
+}
+
+.month {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px 32px;
+}
+
+.month[hidden],
+.event[hidden] {
+  display: none;
+}
+
+/* Le mois reste affiché à côté de ses rendez-vous pendant le défilement */
+.month-title {
+  position: sticky;
+  top: 100px;
+  margin: 0;
+  font-size: clamp(30px, 3.2vw, 44px);
+  line-height: 0.9;
+  font-stretch: 80%;
+}
+
+.month-title small {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: none;
+  color: var(--subtle);
+}
+
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+/* Chaque rendez-vous est un billet, comme sur l'accueil */
+.event {
+  --stub: 96px;
+  display: grid;
+  grid-template-columns: var(--stub) minmax(0, 1fr);
+  min-height: 132px;
+  border-radius: 16px;
+  background: var(--white);
+  -webkit-mask:
+    radial-gradient(circle 9px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle 9px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle 9px at var(--stub) 0, transparent 97%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle 9px at var(--stub) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
+}
+
+.event-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 6px;
+  background: var(--ink);
+  color: var(--white);
+  text-align: center;
+}
+
+.event-weekday,
+.event-month {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.event-day {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-style: italic;
+  font-weight: 900;
+  font-stretch: 110%;
+  line-height: 1;
+}
+
+.event-range {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.event--stages .event-date {
+  background: var(--blue);
+}
+
+.event--club .event-date {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.event--club .event-weekday,
+.event--club .event-month {
+  color: rgba(22, 20, 18, 0.72);
+}
+
+.event-body {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px 28px;
+  padding: 18px 22px;
+  border-left: 2px dashed rgba(22, 20, 18, 0.2);
+}
+
+.event-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.event-tag {
+  --tag: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--subtle);
+}
+
+.event-tag::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tag);
+}
+
+.event--stages .event-tag {
+  --tag: var(--blue);
+}
+
+.event--club .event-tag {
+  --tag: var(--accent);
+}
+
+.event-title {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.event-desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.event-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.event-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.event-facts dt {
+  color: var(--subtle);
+}
+
+.event-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.event-side .tlink {
+  min-height: 40px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Rendez-vous passés : main.js les repère d'après leur date */
+.event.is-past {
+  opacity: 0.62;
+}
+
+.event.is-past .event-date {
+  background: #8A857F;
+  color: var(--white);
+}
+
+.event.is-past .event-weekday,
+.event.is-past .event-month {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.event-over {
+  color: var(--ink);
+}
+
+/* Appel aux bénévoles */
+.volunteer {
+  position: relative;
+  margin: clamp(56px, 7vw, 96px) 16px 0;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--blue);
+  color: var(--white);
+}
+
+.volunteer-deco {
+  position: absolute;
+  right: -6%;
+  top: -40%;
+  width: clamp(260px, 34vw, 480px);
+  aspect-ratio: 1 / 1;
+}
+
+.volunteer-deco svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.volunteer-inner {
+  position: relative;
+  max-width: 1232px;
+  margin: 0 auto;
+  padding: clamp(44px, 6vw, 80px) var(--pad-x);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px 48px;
+}
+
+.volunteer-text {
+  flex: 1 1 420px;
+  min-width: 0;
+  max-width: 660px;
+}
+
+.volunteer-title {
+  margin: 0;
+  font-size: clamp(44px, 6vw, 84px);
+  line-height: 0.86;
+  font-stretch: 76%;
+}
+
+.volunteer-lead {
+  margin: 18px 0 0;
+  max-width: 50ch;
+  font-size: 17px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Filtre du calendrier : les rendez-vous glissent jusqu'à leur nouvelle place */
+::view-transition-group(*) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
 /* ---------- Animations ---------- */
 
 @keyframes land {
@@ -2466,6 +2870,44 @@ textarea.input {
 @media (min-width: 861px) {
   .menu-panel {
     display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .month {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .month-title {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .event-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 600px) {
+  /* Chiffres du tableau d'affichage plus grands sur la page événements */
+  .events-hero .clock-digits svg {
+    width: 32px;
+    height: 46px;
+  }
+}
+
+@media (max-width: 420px) {
+  .event {
+    --stub: 74px;
+  }
+
+  .event-day {
+    font-size: 32px;
+  }
+
+  .event-body {
+    padding: 16px;
   }
 }
 

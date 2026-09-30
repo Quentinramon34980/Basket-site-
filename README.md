@@ -1,7 +1,8 @@
 # BC Valbrune — site du club de basket
 
-Site du club en deux pages : l’accueil, réalisé à partir de la maquette Claude Design « Page d’accueil »
-(export d’origine conservé dans `Page d’accueil-html.zip`), et une page contact dans le même style.
+Site du club en trois pages : l’accueil, réalisé à partir de la maquette Claude Design « Page d’accueil »
+(export d’origine conservé dans `Page d’accueil-html.zip`), puis une page événements et une page contact
+dans le même style.
 
 HTML, CSS et JavaScript simples : aucune dépendance, aucune étape de compilation.
 
@@ -17,6 +18,7 @@ puis ouvrir <http://localhost:8000>.
 
 ```
 index.html              l’accueil
+evenements.html         calendrier de la saison, filtres, appel aux bénévoles
 contact.html            formulaire, accès au gymnase, questions fréquentes
 assets/css/styles.css   les styles (couleurs, polices et courbe de mouvement en tête de fichier)
 assets/js/main.js       menu, animations, compte à rebours, formulaires
@@ -26,7 +28,7 @@ assets/img/             parquet, salle, cuir, ballon et icône d’onglet
 ## Contenu fictif à remplacer
 
 Le club et toutes ses informations sont inventés pour que le site soit complet. Avant la mise en ligne,
-remplacer dans `index.html` et `contact.html` :
+remplacer dans `index.html`, `evenements.html` et `contact.html` :
 
 - le nom **BC Valbrune**, la ville de **Valbrune** et l’année de création **1978** (écusson du pied de page),
   y compris dans les `<title>` et les balises `<meta>` ;
@@ -35,6 +37,8 @@ remplacer dans `index.html` et `contact.html` :
 - le téléphone **04 65 71 26 40**, dans une tranche réservée par l’Arcep aux œuvres de fiction, et l’e-mail
   **contact@bc-valbrune.fr** ;
 - les adversaires de l’agenda (**ES Castelmoure**, **Saint-Aurèle Basket**) ;
+- les 17 rendez-vous de la page événements : adversaires (Union Basket Lestrade, AS Belcombe,
+  Étoile de Montcalvy), lieux, horaires et tarifs (stages à **95 €**, loto, soirée du club) ;
 - les horaires d’entraînement et les cotisations (**130 €**, **160 €**, **190 €**) des cartes des catégories,
   repris dans les questions fréquentes ;
 - les cinq partenaires (Ville de Valbrune, Maison Fabre, Garage Delorme, Pharmacie des Tilleuls, Le Comptoir du Sport) ;
@@ -66,6 +70,22 @@ indiquée dans la balise `<time>` du billet. Garder le fuseau horaire dans cette
 
 Une fois tous les matchs passés, le compte à rebours disparaît tout seul.
 Le texte du tableau lumineux défilant (`.led-text`, présent deux fois à l’identique) se modifie à la main.
+
+## Mettre à jour la page événements
+
+Chaque rendez-vous est un `<li class="event">` rangé dans le `<section class="month">` de son mois.
+Pour en ajouter un, copier un rendez-vous du même type et adapter :
+
+- `data-type` : `matchs`, `stages` ou `club` (c’est ce que lisent les filtres) ;
+- la classe `event--stages` ou `event--club` pour la couleur du talon (aucune pour un match) ;
+- la date dans la balise `<time datetime="…">`, avec son fuseau horaire ;
+- `data-end="…"` quand le rendez-vous dure plusieurs heures ou plusieurs jours ;
+- `data-match-label="…"` pour un match à domicile : le tableau d’affichage en haut de la page
+  compte alors jusqu’à lui, comme sur l’accueil.
+
+Le nombre de rendez-vous se calcule tout seul, et un rendez-vous terminé passe automatiquement en grisé
+avec la mention « Terminé ». Un lien vers `evenements.html#stages` (ou `#matchs`, `#club`) ouvre le
+calendrier déjà filtré : c’est ce qu’utilise « Stages vacances » dans le pied de page.
 
 ## Recevoir les inscriptions et les messages
 
@@ -102,8 +122,11 @@ Chaque mouvement a un rôle, et tous partagent la même courbe (`--ease-out`) :
   le tableau lumineux s’arrête pour être lu, le + des questions fréquentes devient une croix ;
 - **curseur** (souris uniquement) : le ballon et le badge de l’accueil suivent légèrement le curseur,
   les maillots se balancent vers lui, un projecteur éclaire les cartes sombres du club ;
+- **page événements** : le compte à rebours y devient le tableau d’affichage de la salle, les rendez-vous
+  glissent jusqu’à leur nouvelle place quand on change de filtre, et le nom du mois reste à côté de ses
+  rendez-vous pendant le défilement ;
 - **repères** : un point orange signale dans le menu la section en cours ou la page ouverte,
-  et les deux pages s’enchaînent en fondu dans les navigateurs compatibles.
+  et les pages s’enchaînent en fondu dans les navigateurs compatibles.
 
 Pour retirer un effet sur un élément, supprimer son attribut `data-reveal` ou `data-parallax…`.
 Tout mouvement est coupé pour les personnes qui ont activé « Réduire les animations » sur leur appareil :

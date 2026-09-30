@@ -263,6 +263,68 @@
     timer = setInterval(tick, 1000);
   }
 
+  /* ---------- Page événements : rendez-vous passés et filtre ---------- */
+
+  const eventItems = [...document.querySelectorAll('.event')];
+
+  if (eventItems.length) {
+    // Un rendez-vous est passé à sa fin (data-end) ou, à défaut, deux heures après son début.
+    const now = Date.now();
+    eventItems.forEach((item) => {
+      const start = Date.parse(item.querySelector('time')?.dateTime ?? '');
+      const end = item.dataset.end ? Date.parse(item.dataset.end) : start + 2 * 3600 * 1000;
+      if (end < now) {
+        item.classList.add('is-past');
+        item.querySelector('.event-tag')?.insertAdjacentHTML('beforeend', ' <span class="event-over">· Terminé</span>');
+      }
+    });
+
+    const filter = document.getElementById('filtre-evenements');
+    const months = [...document.querySelectorAll('.month')];
+    const count = document.getElementById('evenements-compte');
+
+    const apply = (type) => {
+      let shown = 0;
+      eventItems.forEach((item) => {
+        item.hidden = type !== 'tout' && item.dataset.type !== type;
+        if (!item.hidden) shown += 1;
+      });
+      months.forEach((month) => {
+        month.hidden = !month.querySelector('.event:not([hidden])');
+      });
+      if (count) count.textContent = `${shown} rendez-vous`;
+    };
+
+    // Les rendez-vous glissent jusqu'à leur nouvelle place (navigateurs compatibles).
+    const show = (type) => {
+      if (reduceMotion || !document.startViewTransition) {
+        apply(type);
+        return;
+      }
+      const moving = [...months, ...eventItems];
+      moving.forEach((element, i) => { element.style.viewTransitionName = `calendrier-${i}`; });
+      document.startViewTransition(() => apply(type)).finished.finally(() => {
+        moving.forEach((element) => { element.style.viewTransitionName = ''; });
+      });
+    };
+
+    filter?.addEventListener('change', (event) => show(event.target.value));
+
+    // evenements.html#stages (ou #matchs, #club) ouvre le calendrier déjà filtré.
+    const fromHash = () => {
+      const value = decodeURIComponent(window.location.hash.slice(1));
+      const radio = value && filter?.querySelector(`input[value="${CSS.escape(value)}"]`);
+      if (!radio) return;
+      radio.checked = true;
+      apply(radio.value);
+      document.getElementById('calendrier')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    };
+    // Le compteur se calcule dès l'arrivée : il reste juste quand on ajoute un rendez-vous.
+    apply(filter?.querySelector('input:checked')?.value ?? 'tout');
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+  }
+
   /* ---------- Formulaires (inscription et contact) ---------- */
   // Sans attribut action sur le formulaire, rien n'est envoyé : la confirmation s'affiche seulement (voir README).
 
